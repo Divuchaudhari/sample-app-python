@@ -1,0 +1,8 @@
+replicaCount: 2
+
+image:
+  repository: sample-app-python
+  tag: local
+
+service:
+  port: 5000
