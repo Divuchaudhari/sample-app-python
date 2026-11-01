@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t sample-app-python:${{ github.sha }} .
+
+      - name: Save image
+        run: docker save sample-app-python:${{ github.sha }} -o image.tar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image
+          path: image.tar
+
+  dev:
+    needs: build
+    uses: Divuchaudhari/platform-pipelines/.github/workflows/company-deployment.yml@main
+    with:
+      environment: dev
+      name: dev
+
+  staging:
+    needs: dev
+    uses: Divuchaudhari/platform-pipelines/.github/workflows/company-deployment.yml@main
+    with:
+      environment: staging
+      name: staging
+
+  production:
+    needs: staging
+    uses: Divuchaudhari/platform-pipelines/.github/workflows/company-deployment.yml@main
+    with:
+      environment: production
+      name: prod
