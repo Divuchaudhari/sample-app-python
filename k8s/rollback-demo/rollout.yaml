@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: sample-app
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+    spec:
+      containers:
+        - name: app
+          image: sample-app-python:v2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: SIMULATE_FAILURE
+              value: "0"
+            - name: APP_VERSION
+              value: "2"
+  strategy:
+    canary:
+      canaryService: sample-app-canary
+      stableService: sample-app-stable
+      steps:
+        - setWeight: 20
+        - analysis:
+            templates:
+              - templateName: health-check
+        - setWeight: 50
+        - pause: {duration: 20s}
+        - setWeight: 100

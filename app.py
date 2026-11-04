@@ -7,6 +7,8 @@ app = Flask(__name__)
 
 @app.route("/health")
 def health():
+    if os.environ.get("SIMULATE_FAILURE") == "1":
+        return jsonify(status="error"), 500
     return jsonify(status="ok")
 
 
