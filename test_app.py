@@ -18,3 +18,10 @@ def test_unknown_route():
     client = app.test_client()
     response = client.get("/nothing")
     assert response.status_code == 404
+
+
+def test_health_failure_switch(monkeypatch):
+    monkeypatch.setenv("SIMULATE_FAILURE", "1")
+    client = app.test_client()
+    response = client.get("/health")
+    assert response.status_code == 500
