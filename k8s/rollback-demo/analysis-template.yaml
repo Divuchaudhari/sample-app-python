@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: health-check
+spec:
+  metrics:
+    - name: canary-health
+      count: 1
+      failureLimit: 0
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: check
+                    image: curlimages/curl:8.10.1
+                    command: ["sh", "-c"]
+                    args:
+                      - |
+                        for i in 1 2 3 4 5; do
+                          curl -sf http://sample-app-canary:5000/health || exit 1
+                          sleep 2
+                        done

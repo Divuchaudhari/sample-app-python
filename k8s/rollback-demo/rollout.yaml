@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: sample-app
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: app
+          image: sample-app-python:v3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: SIMULATE_FAILURE
+              value: "0"
+            - name: APP_VERSION
+              value: "3"
+  strategy:
+    canary:
+      canaryService: sample-app-canary
+      stableService: sample-app-stable
+      steps:
+        - setWeight: 20
+        - analysis:
+            templates:
+              - templateName: error-rate
+            args:
+              - name: canary-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
+        - setWeight: 50
+        - pause: {duration: 20s}
+        - setWeight: 100

@@ -1,12 +1,16 @@
 import os
 
 from flask import Flask, jsonify
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
 
 
 @app.route("/health")
 def health():
+    if os.environ.get("SIMULATE_FAILURE") == "1":
+        return jsonify(status="error"), 500
     return jsonify(status="ok")
 
 
