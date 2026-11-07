@@ -1,0 +1,27 @@
+name: DORA metrics
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  dora:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Deploy run history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh api
+          "repos/${{ github.repository }}/actions/workflows/deploy.yml/runs?per_page=100"
+          > runs.json
+
+      - name: Calculate DORA metrics
+        run: python scripts/dora.py runs.json >> "$GITHUB_STEP_SUMMARY"
